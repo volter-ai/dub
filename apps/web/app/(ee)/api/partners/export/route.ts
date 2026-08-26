@@ -19,11 +19,16 @@ export const GET = withWorkspace(
     const parsedParams = partnersExportQuerySchema.parse(searchParams);
     const { columns, ...filters } = parsedParams;
 
-    const partnersCount = await getPartnersCount<number>({
-      ...filters,
-      groupBy: undefined,
-      programId,
-    });
+    // The database path, like the export below, so this count sizes the same
+    // result set the export will produce.
+    const partnersCount = await getPartnersCount<number>(
+      {
+        ...filters,
+        groupBy: undefined,
+        programId,
+      },
+      { searchProvider: null },
+    );
 
     // Process the export in the background if the number of partners is greater than MAX_PARTNERS_TO_EXPORT
     if (partnersCount > MAX_PARTNERS_TO_EXPORT) {
@@ -40,13 +45,19 @@ export const GET = withWorkspace(
       return NextResponse.json({}, { status: 202 });
     }
 
-    const partners = await getPartners({
-      ...filters,
-      page: 1,
-      pageSize: MAX_PARTNERS_TO_EXPORT,
-      programId,
-      includeGroup: columns.includes("group"),
-    });
+    // Search stays on the database path: the provider truncates at its
+    // candidate ceiling, and a file that silently lost rows is worse than one
+    // searched over fewer fields.
+    const partners = await getPartners(
+      {
+        ...filters,
+        page: 1,
+        pageSize: MAX_PARTNERS_TO_EXPORT,
+        programId,
+        includeGroup: columns.includes("group"),
+      },
+      { searchProvider: null },
+    );
 
     const formattedPartners = formatPartnersForExport(partners, columns);
 

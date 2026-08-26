@@ -324,6 +324,9 @@ export const getPartnersRouteQuerySchema = getPartnersQuerySchemaExtended
 export const partnersExportQuerySchema = getPartnersQuerySchemaExtended
   .omit({ page: true, pageSize: true })
   .extend({
+    // Exports stay on the database search path, which cannot rank by
+    // relevance, so the value is rejected rather than silently downgraded.
+    sortBy: getPartnersQuerySchema.shape.sortBy,
     columns: z
       .string()
       .default(exportPartnersColumnsDefault.join(","))

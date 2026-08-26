@@ -22,12 +22,17 @@ export async function* fetchPartnersBatch({
   let hasMore = true;
 
   while (hasMore) {
-    const partners = await getPartners({
-      ...filters,
-      page,
-      pageSize,
-      includeGroup: columns.includes("group"),
-    });
+    // Search stays on the database path: the provider truncates at its
+    // candidate ceiling, and this export pages to the end of the result set.
+    const partners = await getPartners(
+      {
+        ...filters,
+        page,
+        pageSize,
+        includeGroup: columns.includes("group"),
+      },
+      { searchProvider: null },
+    );
 
     if (partners.length > 0) {
       yield { partners };

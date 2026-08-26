@@ -1,4 +1,7 @@
-import { getPartnersRouteQuerySchema } from "@/lib/zod/schemas/partners";
+import {
+  getPartnersRouteQuerySchema,
+  partnersExportQuerySchema,
+} from "@/lib/zod/schemas/partners";
 import { describe, expect, it } from "vitest";
 
 const accepts = (params: Record<string, unknown>) =>
@@ -62,5 +65,27 @@ describe("getPartnersRouteQuerySchema", () => {
     expect(result.error?.issues[0].message).toContain(
       "sortBy=relevance requires a non-empty search",
     );
+  });
+});
+
+describe("partnersExportQuerySchema", () => {
+  // Exports stay on the database search path, which cannot rank by relevance,
+  // so the value is rejected rather than silently downgraded to another sort.
+  it("rejects relevance", () => {
+    expect(
+      partnersExportQuerySchema.safeParse({
+        sortBy: "relevance",
+        search: "examp",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("accepts the database sorts", () => {
+    expect(
+      partnersExportQuerySchema.safeParse({
+        sortBy: "totalSaleAmount",
+        search: "examp",
+      }).success,
+    ).toBe(true);
   });
 });
