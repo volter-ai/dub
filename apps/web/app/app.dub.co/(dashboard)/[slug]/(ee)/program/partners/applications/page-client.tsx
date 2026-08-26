@@ -1,5 +1,6 @@
 "use client";
 
+import { PARTNER_SEARCH_CANDIDATE_LIMIT } from "@/lib/api/partners/search/types";
 import { buildSocialPlatformLookup } from "@/lib/social-utils";
 import { mutatePrefix } from "@/lib/swr/mutate";
 import useGroups from "@/lib/swr/use-groups";
@@ -76,6 +77,7 @@ export function ProgramPartnersApplicationsPageClient() {
 
   const sortBy = searchParams.get("sortBy") || "createdAt";
   const sortOrder = searchParams.get("sortOrder") === "asc" ? "asc" : "desc";
+  const search = searchParams.get("search")?.trim();
 
   const isFiltered = Object.keys(searchParamsObj).some(
     (key) => !["sortBy", "sortOrder", "page"].includes(key),
@@ -406,6 +408,10 @@ export function ProgramPartnersApplicationsPageClient() {
     tdClassName: "border-l-0",
     resourceName: (p) => `application${p ? "s" : ""}`,
     rowCount: partnersCount || 0,
+    ...(search &&
+      partnersCount !== undefined && {
+        maxBrowsableRows: PARTNER_SEARCH_CANDIDATE_LIMIT,
+      }),
     loading: isValidating || isCurrentPartnerLoading,
     error: error || countError ? "Failed to load applications" : undefined,
   });

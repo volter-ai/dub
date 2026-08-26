@@ -75,8 +75,14 @@ export type UseTableProps<T> = BaseTableProps<T> &
         pagination?: PaginationState;
         onPaginationChange?: Dispatch<SetStateAction<PaginationState>>;
         rowCount: number;
+        maxBrowsableRows?: number;
       }
-    | { pagination?: never; onPaginationChange?: never; rowCount?: never }
+    | {
+        pagination?: never;
+        onPaginationChange?: never;
+        rowCount?: never;
+        maxBrowsableRows?: never;
+      }
   );
 
 export type TableProps<T> = BaseTableProps<T> &
@@ -88,6 +94,12 @@ export type TableProps<T> = BaseTableProps<T> &
         pagination?: PaginationState;
         paginationAllRowsHref?: string;
         rowCount: number;
+        maxBrowsableRows?: number;
       }
-    | { pagination?: never; paginationAllRowsHref?: never; rowCount?: never }
+    | {
+        pagination?: never;
+        paginationAllRowsHref?: never;
+        rowCount?: never;
+        maxBrowsableRows?: never;
+      }
   );

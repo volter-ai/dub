@@ -66,6 +66,7 @@ export function useTable<T extends any>(
   const {
     data,
     rowCount,
+    maxBrowsableRows,
     columns,
     defaultColumn,
     columnPinning,
@@ -78,6 +79,38 @@ export function useTable<T extends any>(
 
   const selectionEnabled =
     !!props.onRowSelectionChange || !!props.selectionControls;
+
+  const browsableRowCount =
+    rowCount !== undefined && maxBrowsableRows !== undefined
+      ? Math.min(rowCount, maxBrowsableRows)
+      : rowCount;
+  // Only computed when the cap is opted in: rowCount alone is 0 while a
+  // count is still loading, and clamping on that would reset a deep-linked
+  // page on every paginated table before the real count arrives.
+  const browsablePageCount =
+    pagination &&
+    maxBrowsableRows !== undefined &&
+    browsableRowCount !== undefined
+      ? Math.max(1, Math.ceil(browsableRowCount / pagination.pageSize))
+      : null;
+
+  // A URL or saved view can point past the backend's browsable range. Move it
+  // to the last valid page so the caller does not get stuck on an empty state.
+  useEffect(() => {
+    if (
+      !pagination ||
+      !onPaginationChange ||
+      browsablePageCount === null ||
+      pagination.pageIndex <= browsablePageCount
+    ) {
+      return;
+    }
+
+    onPaginationChange((current) => ({
+      ...current,
+      pageIndex: browsablePageCount,
+    }));
+  }, [browsablePageCount, onPaginationChange, pagination?.pageIndex]);
 
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
     props.columnVisibility ?? {},
@@ -262,7 +295,7 @@ export function useTable<T extends any>(
 
   const table = useReactTable({
     data,
-    rowCount,
+    rowCount: browsableRowCount,
     columns: tableColumns,
     defaultColumn: {
       minSize: enableColumnResizing ? 120 : 0,
@@ -820,8 +853,8 @@ export function Table<T>({
             </span>{" "}
             of{" "}
             <As href={paginationAllRowsHref ?? "#"} className="font-medium">
-              {table.getRowCount().toLocaleString()}{" "}
-              {resourceName?.(table.getRowCount() !== 1) || "items"}
+              {rowCount.toLocaleString()}{" "}
+              {resourceName?.(rowCount !== 1) || "items"}
             </As>
           </div>
           <div className="flex items-center gap-2">
@@ -831,7 +864,7 @@ export function Table<T>({
               className="h-7 px-2"
               onClick={() => table.previousPage()}
               // disabled={!table.getCanPreviousPage()}
-              disabled={pagination.pageIndex === 1}
+              disabled={pagination.pageIndex <= 1}
             />
             <Button
               variant="secondary"
@@ -839,7 +872,7 @@ export function Table<T>({
               className="h-7 px-2"
               onClick={() => table.nextPage()}
               // disabled={!table.getCanNextPage()}
-              disabled={pagination.pageIndex === table.getPageCount()}
+              disabled={pagination.pageIndex >= table.getPageCount()}
             />
           </div>
         </div>

@@ -2,6 +2,7 @@
 
 import { deleteProgramInviteAction } from "@/lib/actions/partners/delete-program-invite";
 import { resendProgramInviteAction } from "@/lib/actions/partners/resend-program-invite";
+import { PARTNER_SEARCH_CANDIDATE_LIMIT } from "@/lib/api/partners/search/types";
 import { getDeletePartnerDisabledTooltip } from "@/lib/partners/utils";
 import { mutatePrefix } from "@/lib/swr/mutate";
 import useGroups from "@/lib/swr/use-groups";
@@ -545,6 +546,10 @@ export function PartnersTable() {
     tdClassName: "border-l-0",
     resourceName: (p) => `partner${p ? "s" : ""}`,
     rowCount: partnersCount || 0,
+    ...(search &&
+      partnersCount !== undefined && {
+        maxBrowsableRows: PARTNER_SEARCH_CANDIDATE_LIMIT,
+      }),
     loading: isLoading,
     error: error || countError ? "Failed to load partners" : undefined,
   });
