@@ -1,11 +1,6 @@
 name: "Deploy embed script"
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "packages/embeds/core/**"
   workflow_dispatch:
 
 jobs:
